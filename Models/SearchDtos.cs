@@ -23,11 +23,6 @@ public sealed class SearchResponse
     public IReadOnlyList<SearchItem> Results { get; init; } = [];
 }
 
-/// <summary>
-/// One search result. <see cref="Data"/> is the fully typed row object
-/// (e.g. <see cref="ProductRow"/> or <see cref="CustomerRow"/>),
-/// serialised as its concrete type so the API consumer sees all fields.
-/// </summary>
 public class SearchItem
 {
     public string? SheetName { get; set; }
