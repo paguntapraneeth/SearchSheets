@@ -28,16 +28,16 @@ public sealed class SearchResponse
 /// (e.g. <see cref="ProductRow"/> or <see cref="CustomerRow"/>),
 /// serialised as its concrete type so the API consumer sees all fields.
 /// </summary>
-public sealed class SearchItem
+public class SearchItem
 {
-    public string    SheetName { get; init; } = string.Empty;
-    public string    SheetType { get; init; } = string.Empty;
-    public int       RowIndex  { get; init; }
-    public string    Snippet   { get; init; } = string.Empty;
+    public string? SheetName { get; set; }
+    public string? SheetType { get; set; }
+    public int RowIndex { get; set; }
 
-    /// <summary>
-    /// The typed row data. Consumers can discriminate on <see cref="SheetType"/>
-    /// to deserialise into <see cref="ProductRow"/> or <see cref="CustomerRow"/>.
-    /// </summary>
-    public ISheetRow Data { get; init; } = null!;
+    // 🔥 Flattened fields
+    public string? Name { get; set; }
+    public string? Phone { get; set; }
+    public string? TH { get; set; }
+    public string? RO { get; set; }
+    public decimal? AM { get; set; }
 }

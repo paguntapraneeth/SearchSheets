@@ -42,51 +42,52 @@ public sealed class SheetsService : ISheetsService, IDisposable
     }
 
     public async Task<IList<ISheetRow>> GetRowsAsync(
-        SheetConfig config, CancellationToken ct = default)
+    SheetConfig config, CancellationToken ct = default)
     {
-        if (string.IsNullOrWhiteSpace(config.SheetType) ||
-            !SheetRowFactory.IsKnownType(config.SheetType))
-        {
-            throw new InvalidOperationException(
-                $"Sheet '{config.SheetId}' has an unknown SheetType '{config.SheetType}'. " +
-                $"Set SheetType to one of: Product, Customer.");
-        }
+        if (string.IsNullOrWhiteSpace(config.SheetType))
+            throw new InvalidOperationException("SheetType is required");
 
-        var range = string.IsNullOrWhiteSpace(config.WorksheetName)
-            ? "A1:ZZZ"
-            : $"'{config.WorksheetName}'!A1:ZZZ";
+        // ✅ Correct range (FIXED)
+        var worksheet = string.IsNullOrWhiteSpace(config.WorksheetName)
+            ? "Sheet1"
+            : config.WorksheetName;
 
-        _logger.LogDebug(
+        var range = $"{worksheet}!A1:M";   // 👈 based on your columns
+
+        _logger.LogInformation(
             "Fetching {SheetId} [{SheetType}] range '{Range}'",
             config.SheetId, config.SheetType, range);
 
-        var request  = _client.Spreadsheets.Values.Get(config.SheetId, range);
+        var request = _client.Spreadsheets.Values.Get(config.SheetId, range);
+        Console.WriteLine($"SheetId = {config.SheetId}");
+        Console.WriteLine($"Worksheet = {config.WorksheetName}");
+        Console.WriteLine($"Range = {range}");
         var response = await request.ExecuteAsync(ct);
-        var raw      = response.Values;
+        var raw = response.Values;
 
         if (raw is null || raw.Count < 2)
         {
-            _logger.LogWarning(
-                "Sheet {SheetId} returned no data rows (check that the first row is a header)",
-                config.SheetId);
+            _logger.LogWarning("No data found in sheet {SheetId}", config.SheetId);
             return [];
         }
 
-        // Row 0 = headers, rows 1..N = data.
         var headers = raw[0]
-            .Select(h => h?.ToString() ?? string.Empty)
+            .Select(h => h?.ToString()?.Trim() ?? string.Empty)
             .ToList();
 
-        var result = new List<ISheetRow>(raw.Count - 1);
+        var result = new List<ISheetRow>();
 
         for (var i = 1; i < raw.Count; i++)
         {
             var cells = raw[i];
 
-            // Build column → value dictionary for this row.
-            var dict = new Dictionary<string, object?>(headers.Count);
+            var dict = new Dictionary<string, object?>();
+
             for (var j = 0; j < headers.Count; j++)
-                dict[headers[j]] = j < cells.Count ? cells[j]?.ToString() : null;
+            {
+                var value = j < cells.Count ? cells[j]?.ToString()?.Trim() : null;
+                dict[headers[j]] = value;
+            }
 
             try
             {
@@ -96,8 +97,8 @@ public sealed class SheetsService : ISheetsService, IDisposable
             {
                 _logger.LogWarning(
                     ex,
-                    "Skipping row {Row} in sheet {SheetId} — mapping failed",
-                    i, config.SheetId);
+                    "Skipping row {Row} — mapping failed",
+                    i);
             }
         }
 

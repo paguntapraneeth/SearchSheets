@@ -44,16 +44,4 @@ public sealed class SyncController : ControllerBase
             ? Ok(result)
             : StatusCode(StatusCodes.Status207MultiStatus, result);
     }
-
-    /// <summary>
-    /// Returns the last-sync timestamp, row count, and sheet type
-    /// for every configured sheet.
-    /// </summary>
-    [HttpGet("status")]
-    [ProducesResponseType<SyncStatusResponse>(StatusCodes.Status200OK)]
-    public async Task<IActionResult> GetStatus(CancellationToken ct)
-    {
-        var status = await _searchService.GetStatusAsync(ct);
-        return Ok(status);
-    }
 }
