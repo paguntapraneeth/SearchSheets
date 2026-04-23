@@ -14,30 +14,42 @@ public sealed class SheetsService : ISheetsService, IDisposable
     private readonly ILogger<SheetsService> _logger;
 
     public SheetsService(
-        IOptions<AppSettings>   settings,
-        ILogger<SheetsService>  logger)
+    IOptions<AppSettings> settings,
+    ILogger<SheetsService> logger)
     {
         _logger = logger;
-        var credPath = settings.Value.CredentialsFilePath;
 
-        if (!File.Exists(credPath))
-            throw new FileNotFoundException(
-                $"Google service-account credentials not found at: {Path.GetFullPath(credPath)}\n" +
-                "Steps:\n" +
-                "  1. Google Cloud Console → IAM → Service Accounts\n" +
-                "  2. Create / select a service account → Keys → Add Key → JSON\n" +
-                "  3. Save the downloaded file as credentials.json beside the app\n" +
-                "  4. Share each spreadsheet with the service account email (Viewer role)\n" +
-                "  5. Update CredentialsFilePath in appsettings.json if saved elsewhere");
+        var json = Environment.GetEnvironmentVariable("GOOGLE_CREDENTIALS");
 
-        var credential = GoogleCredential
-            .FromFile(credPath)
-            .CreateScoped(GoogleSheetsService.Scope.SpreadsheetsReadonly);
+        GoogleCredential credential;
+
+        if (!string.IsNullOrWhiteSpace(json))
+        {
+            // ✅ Render / production
+            credential = GoogleCredential
+                .FromJson(json)
+                .CreateScoped(GoogleSheetsService.Scope.SpreadsheetsReadonly);
+        }
+        else
+        {
+            // ✅ Local fallback
+            var credPath = "credentials.json";
+
+            if (!File.Exists(credPath))
+            {
+                throw new InvalidOperationException(
+                    "Neither GOOGLE_CREDENTIALS env variable nor credentials.json found.");
+            }
+
+            credential = GoogleCredential
+                .FromFile(credPath)
+                .CreateScoped(GoogleSheetsService.Scope.SpreadsheetsReadonly);
+        }
 
         _client = new GoogleSheetsService(new BaseClientService.Initializer
         {
             HttpClientInitializer = credential,
-            ApplicationName       = "SheetsSearchApp"
+            ApplicationName = "SheetsSearchApp"
         });
     }
 
@@ -47,7 +59,7 @@ public sealed class SheetsService : ISheetsService, IDisposable
         if (string.IsNullOrWhiteSpace(config.SheetType))
             throw new InvalidOperationException("SheetType is required");
 
-        // ✅ Correct range (FIXED)
+        //  Correct range (FIXED)
         var worksheet = string.IsNullOrWhiteSpace(config.WorksheetName)
             ? "Sheet1"
             : config.WorksheetName;

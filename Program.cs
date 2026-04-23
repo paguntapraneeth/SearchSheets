@@ -13,8 +13,12 @@ Log.Logger = new LoggerConfiguration()
 try
 {
     var builder = WebApplication.CreateBuilder(args);
-    var port = Environment.GetEnvironmentVariable("PORT") ?? "5000";
-    builder.WebHost.UseUrls($"http://0.0.0.0:{port}");
+    var port = Environment.GetEnvironmentVariable("PORT");
+
+    if (!string.IsNullOrEmpty(port))
+    {
+        builder.WebHost.UseUrls($"http://0.0.0.0:{port}");
+    }
     // ── Serilog ──────────────────────────────────────────────────────────────
     builder.Host.UseSerilog((ctx, services, cfg) => cfg
         .ReadFrom.Configuration(ctx.Configuration)
