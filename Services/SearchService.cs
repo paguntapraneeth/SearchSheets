@@ -11,13 +11,13 @@ public sealed class SearchService : ISearchService
     private readonly IDbConnectionFactory _db;
     private readonly ILogger<SearchService> _logger;
 
- 
+
     private static readonly JsonSerializerOptions _readOpts = new()
     {
         PropertyNameCaseInsensitive = true
     };
 
-    
+
     private static readonly JsonSerializerOptions _writeOpts = new()
     {
         PropertyNamingPolicy = JsonNamingPolicy.CamelCase
@@ -32,17 +32,16 @@ public sealed class SearchService : ISearchService
         _logger = logger;
     }
 
-   
+
     public async Task<List<SearchItem>> SearchByPhoneAsync(string phone, CancellationToken ct = default)
     {
         using var conn = _db.CreateConnection();
 
-        var rows = await conn.QueryAsync<dynamic>(@"
-            SELECT sheet_name, sheet_type, row_index, row_data
+        string query = $@"SELECT sheet_name, sheet_type, row_index, row_data
             FROM records
             WHERE sheet_type = 'appointment'
-              AND phone = @Phone",
-            new { Phone = phone.Trim() });
+              AND phone = {phone.Trim()}";
+        var rows = await conn.QueryAsync<dynamic>(query);
 
         var results = rows
             .Select(r => BuildSearchItem(r))
@@ -76,7 +75,7 @@ public sealed class SearchService : ISearchService
                 SheetType = sheetType,
                 RowIndex = (int)r.row_index,
 
-            
+
                 Name = data.Name,
                 Phone = data.ContactNo,
                 TH = data.Treatment,
@@ -90,7 +89,7 @@ public sealed class SearchService : ISearchService
         }
     }
 
-  
+
     public async Task UpsertSheetRowsAsync(
         string sheetId,
         string sheetName,
@@ -113,7 +112,7 @@ public sealed class SearchService : ISearchService
             var content = row.ToSearchText();
             var phone = (row as AppointmentRow)?.ContactNo?.Trim();
 
-            
+
             var json = row is AppointmentRow a
                 ? JsonSerializer.Serialize(a, _writeOpts)
                 : "{}";
@@ -127,7 +126,7 @@ public sealed class SearchService : ISearchService
                     SheetName = sheetName,
                     SheetType = sheetType,
                     RowIndex = index++,
-                    RowData = json, 
+                    RowData = json,
                     ContentText = content,
                     Phone = phone
                 });
