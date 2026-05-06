@@ -9,9 +9,9 @@ namespace SheetsSearchApp.Services;
 /// </summary>
 public sealed class SyncBackgroundService : BackgroundService
 {
-    private readonly ISheetsService                 _sheets;
-    private readonly ISearchService                 _search;
-    private readonly AppSettings                    _settings;
+    private readonly ISheetsService _sheets;
+    private readonly ISearchService _search;
+    private readonly AppSettings _settings;
     private readonly ILogger<SyncBackgroundService> _logger;
 
     /// <summary>
@@ -21,15 +21,15 @@ public sealed class SyncBackgroundService : BackgroundService
     private readonly SemaphoreSlim _lock = new(1, 1);
 
     public SyncBackgroundService(
-        ISheetsService                  sheets,
-        ISearchService                  search,
-        IOptions<AppSettings>           settings,
-        ILogger<SyncBackgroundService>  logger)
+        ISheetsService sheets,
+        ISearchService search,
+        IOptions<AppSettings> settings,
+        ILogger<SyncBackgroundService> logger)
     {
-        _sheets   = sheets;
-        _search   = search;
+        _sheets = sheets;
+        _search = search;
         _settings = settings.Value;
-        _logger   = logger;
+        _logger = logger;
     }
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
@@ -87,6 +87,7 @@ public sealed class SyncBackgroundService : BackgroundService
 
                 try
                 {
+                    _logger.LogInformation("CONFIG → SheetId: {Id}, Worksheet: {Worksheet}", config.SheetId, config.WorksheetName);
                     _logger.LogInformation(
                         "Syncing '{Name}' [{Type}] ({Id})…",
                         displayName, sheetType, config.SheetId);
