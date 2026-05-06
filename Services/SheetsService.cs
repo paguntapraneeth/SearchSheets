@@ -60,7 +60,7 @@ public sealed class SheetsService : ISheetsService, IDisposable
 
         //  Correct range (FIXED)
         var worksheet = string.IsNullOrWhiteSpace(config.WorksheetName)
-            ? "Sheet1"
+            ? "Main Tracker"
             : config.WorksheetName;
 
         var range = $"{worksheet}!A:M";   // A:M = all rows in columns A–M
