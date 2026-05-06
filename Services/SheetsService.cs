@@ -1,6 +1,5 @@
 using Google.Apis.Auth.OAuth2;
 using Google.Apis.Services;
-using Google.Apis.Sheets.v4;
 using Microsoft.Extensions.Options;
 using SheetsSearchApp.Models;
 
@@ -10,7 +9,7 @@ namespace SheetsSearchApp.Services;
 
 public sealed class SheetsService : ISheetsService, IDisposable
 {
-    private readonly GoogleSheetsService    _client;
+    private readonly GoogleSheetsService _client;
     private readonly ILogger<SheetsService> _logger;
 
     public SheetsService(
@@ -64,7 +63,7 @@ public sealed class SheetsService : ISheetsService, IDisposable
             ? "Sheet1"
             : config.WorksheetName;
 
-        var range = $"{worksheet}!A1:M";   // 👈 based on your columns
+        var range = $"{worksheet}!A:M";   // A:M = all rows in columns A–M
 
         _logger.LogInformation(
             "Fetching {SheetId} [{SheetType}] range '{Range}'",
