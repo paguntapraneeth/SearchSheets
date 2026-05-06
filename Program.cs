@@ -40,6 +40,9 @@ try
     // ── Configuration ────────────────────────────────────────────────────────
     builder.Services.Configure<AppSettings>(
         builder.Configuration.GetSection("AppSettings"));
+    Console.WriteLine("=== APPSETTINGS DEBUG ===");
+    Console.WriteLine($"WorksheetName: {builder.Configuration["AppSettings:Sheets:0:WorksheetName"]}");
+    Console.WriteLine("=========================");
 
     // ── Data layer ───────────────────────────────────────────────────────────
     builder.Services.AddSingleton<IDbConnectionFactory, SqliteConnectionFactory>();
